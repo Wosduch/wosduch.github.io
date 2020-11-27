@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALife</title>
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            position: relative;
+            margin: auto;
+            width: 80%;
+        }
+
+        .container::before {
+            content: "";
+            display: block;
+            padding-top: 50%;
+        }
+
+        .main {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .row {
+            width: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: row;
+        }
+
+        .cell {
+            height: 100%;
+            flex: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+    </div>
+    <script>
+        var Cell = /** @class */ (function () {
+            function Cell(x, y, world, alive) {
+                if (alive === void 0) { alive = false; }
+                this.x = x;
+                this.y = y;
+                this.world = world;
+                this.pixel = document.querySelector(".y-" + y + " .x-" + x);
+                this.alive = alive;
+                this.survive = false;
+                this.neighbours = [];
+            }
+            Cell.prototype.getNeighbours = function () {
+                this.neighbours.push(this.world.getCellByXY(this.x - 1, this.y), this.world.getCellByXY(this.x - 1, this.y + 1), this.world.getCellByXY(this.x, this.y + 1), this.world.getCellByXY(this.x + 1, this.y + 1), this.world.getCellByXY(this.x + 1, this.y), this.world.getCellByXY(this.x + 1, this.y - 1), this.world.getCellByXY(this.x, this.y - 1), this.world.getCellByXY(this.x - 1, this.y - 1));
+            };
+            Cell.prototype.die = function () {
+                this.alive = false;
+                this.pixel.style.backgroundColor = "white";
+            };
+            Cell.prototype.born = function () {
+                this.alive = true;
+                this.pixel.style.backgroundColor = "black";
+            };
+            Cell.prototype.countAliveNeignbours = function () {
+                var sum = 0;
+                this.neighbours.forEach(function (elem) {
+                    if (elem.alive)
+                        sum++;
+                });
+                return sum;
+            };
+            return Cell;
+        }());
+        var World = /** @class */ (function () {
+            function World(width, height, template) {
+                if (template === void 0) { template = null; }
+                this.width = width;
+                this.height = height;
+                this.matrix = [];
+                for (var y = 0; y < this.height; y++) {
+                    this.matrix.push([]);
+                }
+                if (template !== null) {
+                    if (height !== template.length || length !== template[0].length) {
+                        throw new Error("Height or length of the matrix is not equal to template height or length");
+                    }
+                    else {
+                        this.init(template);
+                    }
+                }
+                else {
+                    this.init();
+                }
+            }
+            World.prototype.init = function (template) {
+                if (template === void 0) { template = null; }
+                this.matrix = [];
+                if (template === null) {
+                    for (var yIterator = 0; yIterator < this.height; yIterator++) {
+                        var row = [];
+                        for (var xIterator = 0; xIterator < this.width; xIterator++) {
+                            row.push(new Cell(xIterator, yIterator, this, (Math.random() < 0.6 ? true : false)));
+                        }
+                        this.matrix.push(row);
+                    }
+                }
+                else if (template !== null) {
+                    for (var yIterator = 0; yIterator < this.height; yIterator++) {
+                        var row = void 0;
+                        for (var xIterator = 0; xIterator < this.width; xIterator++) {
+                            row.push(new Cell(xIterator, yIterator, this, template[yIterator][xIterator]));
+                        }
+                        this.matrix.push(row);
+                    }
+                }
+                this.setNeighboursForEveryCell();
+            };
+            World.prototype.getCellByXY = function (x, y) {
+                if (y < 0)
+                    y += this.matrix.length;
+                if (y >= this.matrix.length)
+                    y -= this.matrix.length;
+                if (x >= this.matrix[y].length)
+                    x -= this.matrix[y].length;
+                if (x < 0)
+                    x += this.matrix[y].length;
+                return this.matrix[y][x];
+            };
+            World.prototype.step = function () {
+                this.matrix.forEach(function (row) {
+                    row.forEach(function (elem) {
+                        if (elem.alive) {
+                            if (elem.countAliveNeignbours() === 2 || elem.countAliveNeignbours() === 3) {
+                                elem.survive = true;
+                            }
+                            else {
+                                elem.survive = false;
+                            }
+                        }
+                        else {
+                            if (elem.countAliveNeignbours() === 3) {
+                                elem.survive = true;
+                            }
+                            else {
+                                elem.survive = false;
+                            }
+                        }
+                    });
+                });
+                this.matrix.forEach(function (row) {
+                    row.forEach(function (elem) {
+                        if (elem.alive) {
+                            if (!elem.survive) {
+                                elem.die();
+                            }
+                        }
+                        else {
+                            if (elem.survive) {
+                                elem.born();
+                            }
+                        }
+                    });
+                });
+            };
+            World.prototype.setNeighboursForEveryCell = function () {
+                this.matrix.forEach(function (row) {
+                    row.forEach(function (elem) {
+                        elem.getNeighbours();
+                    });
+                });
+            };
+            return World;
+        }());
+        var container = document.querySelector(".container");
+        var html = "";
+        html += "<div class=\"main\">";
+        for (var y = 0; y < 50; y++) {
+            html += "<div class=\"y-" + y + " row\">";
+            for (var x = 0; x < 100; x++) {
+                html += "<div class=\"x-" + x + " cell\"> </div>";
+            }
+            html += "</div>";
+        }
+        html += "</div>";
+        container.innerHTML = html;
+        var mainWorld = new World(100, 50);
+        var f = setInterval(function () { mainWorld.step(); }, 100);
+    </script>
+</body>
+
+</html>
