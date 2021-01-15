@@ -21,7 +21,7 @@
         .container::before {
             content: "";
             display: block;
-            padding-top: 50%;
+            padding-top: 100%;
         }
 
         .main {
@@ -187,7 +187,7 @@
         var container = document.querySelector(".container");
         var html = "";
         html += "<div class=\"main\">";
-        for (var y = 0; y < 50; y++) {
+        for (var y = 0; y < 100; y++) {
             html += "<div class=\"y-" + y + " row\">";
             for (var x = 0; x < 100; x++) {
                 html += "<div class=\"x-" + x + " cell\"> </div>";
@@ -196,7 +196,7 @@
         }
         html += "</div>";
         container.innerHTML = html;
-        var mainWorld = new World(100, 50);
+        var mainWorld = new World(100, 100);
         var f = setInterval(function () { mainWorld.step(); }, 100);
     </script>
 </body>
